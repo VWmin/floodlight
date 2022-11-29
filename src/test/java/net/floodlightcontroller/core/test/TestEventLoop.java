@@ -102,7 +102,7 @@ public final class TestEventLoop extends AbstractScheduledEventExecutor implemen
         return register(channel, new DefaultChannelPromise(channel, this));
     }
 
-    @Override
+//    @Override
     public ChannelFuture register(ChannelPromise promise) {
         return null;
     }
