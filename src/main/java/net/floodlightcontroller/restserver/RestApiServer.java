@@ -130,9 +130,9 @@ public class RestApiServer implements IFloodlightModule, IRestApiService {
 								"Access-Control-Request-Headers", false, "*");
 
 						// Set CORS headers in response
-						responseHeaders.set(
-								"Access-Control-Expose-Headers",
-								"Authorization, Link");
+//						responseHeaders.set(
+//								"Access-Control-Expose-Headers",
+//								"Authorization, Link");
 						
 						response.setAccessControlAllowOrigin(requestOrigin);
 						response.setAccessControlAllowCredentials(true);
