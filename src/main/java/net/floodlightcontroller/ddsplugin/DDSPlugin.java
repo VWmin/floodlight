@@ -12,12 +12,9 @@ import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener {
+public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDDSPluginService {
 
     protected IFloodlightProviderService floodlightProviderService;
     protected ILinkDiscoveryService linkDiscoveryService;
@@ -26,12 +23,12 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener {
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
-        return null;
+        return Collections.singletonList(IDDSPluginService.class);
     }
 
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
-        return null;
+        return Collections.singletonMap(IDDSPluginService.class, this);
     }
 
 
@@ -66,6 +63,15 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener {
 
     @Override
     public void linkDiscoveryUpdate(List<LDUpdate> updateList) {
-        updateList.forEach(ldUpdate -> logger.info("DDS plugin read link discovery update from internal: {}", ldUpdate));
+        updateList.forEach(ldUpdate -> {
+            logger.info("Read internal link discovery update from LDManager: {}", ldUpdate);
+        });
+        linkDiscoveryService.externalLDUpdates(updateList);
     }
+
+    @Override
+    public void hello() {
+        logger.info("DDS plugin: hello world!");
+    }
+
 }

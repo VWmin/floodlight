@@ -20,6 +20,7 @@ package net.floodlightcontroller.linkdiscovery;
 import java.util.Map;
 import java.util.Set;
 
+import net.floodlightcontroller.ddsplugin.IDDSPluginListener;
 import org.projectfloodlight.openflow.protocol.OFPacketOut;
 import org.projectfloodlight.openflow.types.DatapathId;
 import org.projectfloodlight.openflow.types.MacAddress;
@@ -31,7 +32,7 @@ import net.floodlightcontroller.core.types.NodePortTuple;
 import net.floodlightcontroller.linkdiscovery.internal.LinkInfo;
 
 
-public interface ILinkDiscoveryService extends IFloodlightService {
+public interface ILinkDiscoveryService extends IFloodlightService, IDDSPluginListener {
 
     /**
      * Returns if a given switchport is a tunnel endpoint or not
