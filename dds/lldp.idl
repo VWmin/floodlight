@@ -1,0 +1,13 @@
+module FloodLight {
+    @topic
+    struct LDUpdate {
+        long src;
+        octet srcPort;
+        long dst;
+        octet dstPort;
+        octet srcType;
+        long latency;
+        octet type;
+        octet operation;
+    };
+};

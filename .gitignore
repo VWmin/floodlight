@@ -16,3 +16,11 @@ findbugs-results
 *.iml
 .metadata/
 /bin/
+
+dds/*
+!dds/lldp.idl
+!dds/lldp.mpc
+!dds/cp.cmd
+!dds/lib
+
+repo.ior

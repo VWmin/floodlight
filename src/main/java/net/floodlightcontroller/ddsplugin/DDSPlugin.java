@@ -1,7 +1,6 @@
 package net.floodlightcontroller.ddsplugin;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
-import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDDSPluginService {
 
@@ -59,6 +59,20 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         linkDiscoveryService.addListener(this);
+        DDSPublisher ddsPublisher = new DDSPublisher();
+        DDSSubscriber ddsSubscriber = new DDSSubscriber();
+        ddsPublisher.start();
+        ddsSubscriber.start();
+
+        new Thread(()->{
+            try {
+                TimeUnit.SECONDS.sleep(15);
+                ddsPublisher.stop();
+                ddsSubscriber.stop();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     @Override
