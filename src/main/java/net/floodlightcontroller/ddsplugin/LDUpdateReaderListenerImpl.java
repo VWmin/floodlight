@@ -4,11 +4,19 @@ package net.floodlightcontroller.ddsplugin;
 
 import DDS.*;
 import FloodLight.*;
+import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 
 public class LDUpdateReaderListenerImpl extends DDS._DataReaderListenerLocalBase{
+
+    private final ILinkDiscoveryService linkDiscoveryService;
+
+    public LDUpdateReaderListenerImpl(ILinkDiscoveryService linkDiscoveryService) {
+        this.linkDiscoveryService = linkDiscoveryService;
+    }
 
     @Override
     public void on_requested_deadline_missed(DataReader dataReader, RequestedDeadlineMissedStatus requestedDeadlineMissedStatus) {
@@ -52,7 +60,9 @@ public class LDUpdateReaderListenerImpl extends DDS._DataReaderListenerLocalBase
                 System.out.println("SampleInfo.sample_rank = " + sih.value.sample_rank);
                 System.out.println("SampleInfo.instance_state = " + sih.value.instance_state);
                 if (sih.value.valid_data) {
-                    System.out.println("Bar Message id = " + bh.value.latency);
+                    // TODO: 校验来源，校验term，合法的更新传递到控制器内部
+                    System.out.println(Util.DDSTypeHelper.sample2String(bh.value));
+                    linkDiscoveryService.externalLDUpdates(Collections.singletonList(Util.DDSTypeHelper.sample2Update(bh.value)));
                 }else if (sih.value.instance_state == NOT_ALIVE_DISPOSED_INSTANCE_STATE.value) {
                     System.out.println ("instance is disposed");
                 }

@@ -1915,6 +1915,7 @@ IFloodlightModule, IInfoProvider {
 	@Override
 	public void externalLDUpdates(List<LDUpdate> updateList) {
 		updateList.forEach(update -> log.info("Read external link discovery updates from dds plugin: {}", update));
+		// TODO apply updates to topology
 	}
 	/**
 	 * Gets the storage key for a LinkTuple

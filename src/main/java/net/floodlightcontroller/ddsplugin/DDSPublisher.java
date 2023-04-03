@@ -3,8 +3,16 @@ package net.floodlightcontroller.ddsplugin;
 import DDS.*;
 import FloodLight.*;
 import OpenDDS.DCPS.*;
+import net.floodlightcontroller.linkdiscovery.ILinkDiscovery;
 import org.omg.CORBA.StringSeqHolder;
+import org.projectfloodlight.openflow.types.DatapathId;
+import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.U64;
 
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 
@@ -12,6 +20,8 @@ public class DDSPublisher {
     private Worker worker;
     private DomainParticipantFactory dpf;
     private DomainParticipant dp;
+
+    private final BlockingQueue<ILinkDiscovery.LDUpdate> toPublish = new LinkedBlockingQueue<>();
 
     public DDSPublisher(){
         init();
@@ -55,7 +65,7 @@ public class DDSPublisher {
 
         // 将泛型 data writer 缩小到特定类型，并注册希望发布的实例
         LDUpdateDataWriter updateDataWriter = LDUpdateDataWriterHelper.narrow(dw);
-        worker = new Worker(updateDataWriter);
+        worker = new Worker(updateDataWriter, toPublish);
     }
 
     public void stop(){
@@ -76,20 +86,31 @@ public class DDSPublisher {
         worker.start();
     }
 
+    public void publish(ILinkDiscovery.LDUpdate ldUpdate) {
+        try {
+            toPublish.put(ldUpdate);
+        } catch (InterruptedException e) {
+            worker.stop();
+            stop();
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
     public static class Worker implements Runnable {
         LDUpdate sample;
         int handle;
         private final Thread workerThread;
         LDUpdateDataWriter updateDataWriter;
+        BlockingQueue<ILinkDiscovery.LDUpdate> toPublish;
 
-        int count = 0;
 
-
-        public Worker(LDUpdateDataWriter updateDataWriter){
+        public Worker(LDUpdateDataWriter updateDataWriter, BlockingQueue<ILinkDiscovery.LDUpdate> toPublish) {
             this.updateDataWriter = updateDataWriter;
             sample = new LDUpdate();
             handle = updateDataWriter.register_instance(sample);
-            workerThread = new Thread(this);
+            workerThread = new Thread(this, "DDSPublisher-Worker");
+            this.toPublish = toPublish;
         }
 
 
@@ -102,11 +123,10 @@ public class DDSPublisher {
                 }
 
                 try{
-                    TimeUnit.SECONDS.sleep(2);
                     // do something...
-                    sample.latency = ++count;
+                    ILinkDiscovery.LDUpdate take = toPublish.take();
+                    Util.DDSTypeHelper.update2Sample(take, sample);
                     send();
-
                 } catch (InterruptedException e) {
                     currentThread.interrupt();
                 }

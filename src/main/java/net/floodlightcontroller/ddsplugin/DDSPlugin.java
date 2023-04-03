@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDDSPluginService {
@@ -19,6 +20,9 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     protected IFloodlightProviderService floodlightProviderService;
     protected ILinkDiscoveryService linkDiscoveryService;
     protected static Logger logger;
+
+    private DDSPublisher ddsPublisher;
+    private DDSSubscriber ddsSubscriber;
 
 
     @Override
@@ -59,28 +63,18 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         linkDiscoveryService.addListener(this);
-        DDSPublisher ddsPublisher = new DDSPublisher();
-        DDSSubscriber ddsSubscriber = new DDSSubscriber();
+        ddsPublisher = new DDSPublisher();
+        ddsSubscriber = new DDSSubscriber(linkDiscoveryService);
         ddsPublisher.start();
         ddsSubscriber.start();
-
-        new Thread(()->{
-            try {
-                TimeUnit.SECONDS.sleep(15);
-                ddsPublisher.stop();
-                ddsSubscriber.stop();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }).start();
     }
 
     @Override
     public void linkDiscoveryUpdate(List<LDUpdate> updateList) {
         updateList.forEach(ldUpdate -> {
             logger.info("Read internal link discovery update from LDManager: {}", ldUpdate);
+            ddsPublisher.publish(ldUpdate);
         });
-        linkDiscoveryService.externalLDUpdates(updateList);
     }
 
     @Override

@@ -3,6 +3,7 @@ package net.floodlightcontroller.ddsplugin;
 import DDS.*;
 import FloodLight.*;
 import OpenDDS.DCPS.*;
+import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
 import org.omg.CORBA.StringSeqHolder;
 
 
@@ -12,11 +13,7 @@ public class DDSSubscriber {
     private DomainParticipantFactory dpf;
     private DomainParticipant dp;
 
-    public DDSSubscriber(){
-        init();
-    }
-
-    private void init() {
+    public DDSSubscriber(ILinkDiscoveryService linkDiscoveryService){
         String[] args = {"-DCPSConfigFile", "transport.ini"};
         dpf = TheParticipantFactory.WithArgs(new StringSeqHolder(args));
         if (dpf == null) {
@@ -44,9 +41,8 @@ public class DDSSubscriber {
 
 
         // 向中间件提供listener是通知数据接收和访问数据的最简单方式
-        LDUpdateReaderListenerImpl listener = new LDUpdateReaderListenerImpl();
+        LDUpdateReaderListenerImpl listener = new LDUpdateReaderListenerImpl(linkDiscoveryService);
         worker = new Worker(sub, top, listener);
-
     }
 
     public void stop() {
@@ -77,7 +73,7 @@ public class DDSSubscriber {
             this.sub = sub;
             this.top = top;
             this.listener = listener;
-            workerThread = new Thread(this);
+            workerThread = new Thread(this, "DDSSubscriber-Worker");
         }
 
 
