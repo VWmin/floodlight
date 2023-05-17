@@ -60,9 +60,11 @@ public class LDUpdateReaderListenerImpl extends DDS._DataReaderListenerLocalBase
                 System.out.println("SampleInfo.sample_rank = " + sih.value.sample_rank);
                 System.out.println("SampleInfo.instance_state = " + sih.value.instance_state);
                 if (sih.value.valid_data) {
-                    // TODO: 校验来源，校验term，合法的更新传递到控制器内部
+                    // TODO: 校验term，合法的更新传递到控制器内部
                     System.out.println(Util.DDSTypeHelper.sample2String(bh.value));
-                    linkDiscoveryService.externalLDUpdates(Collections.singletonList(Util.DDSTypeHelper.sample2Update(bh.value)));
+                    if (bh.value.instance != DDSInfo.INSTANCE_ID) {
+                        linkDiscoveryService.externalLDUpdates(Collections.singletonList(Util.DDSTypeHelper.sample2Update(bh.value)));
+                    }
                 }else if (sih.value.instance_state == NOT_ALIVE_DISPOSED_INSTANCE_STATE.value) {
                     System.out.println ("instance is disposed");
                 }

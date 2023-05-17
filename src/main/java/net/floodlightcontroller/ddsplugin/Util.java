@@ -119,7 +119,7 @@ public class Util {
         private DDSTypeHelper() {
         }
         public static ILinkDiscovery.LDUpdate sample2Update(FloodLight.LDUpdate sample) {
-            return new ILinkDiscovery.LDUpdate(
+            ILinkDiscovery.LDUpdate update = new ILinkDiscovery.LDUpdate(
                     DatapathId.of(sample.src),
                     OFPort.of(sample.srcPort),
                     DatapathId.of(sample.dst),
@@ -128,8 +128,11 @@ public class Util {
                     LinkTypeHelper.int2Type(sample.type),
                     UpdateOperationHelper.int2Operation(sample.operation)
             );
+            update.fromExternal = true;
+            return update;
         }
         public static void update2Sample(ILinkDiscovery.LDUpdate update, FloodLight.LDUpdate sample){
+            sample.instance = DDSInfo.INSTANCE_ID;
             sample.src = (int) Optional.ofNullable(update.getSrc()).map(DatapathId::getLong).orElse(0L).longValue();
             sample.dst = (int) Optional.ofNullable(update.getDst()).map(DatapathId::getLong).orElse(0L).longValue();
             sample.srcPort = (byte) Optional.ofNullable(update.getSrcPort()).map(OFPort::getPortNumber).orElse(0).intValue();
@@ -142,7 +145,8 @@ public class Util {
         }
 
         public static String sample2String(FloodLight.LDUpdate sample) {
-            return "[src: " + sample.src + ", " +
+            return "[instance: " + sample.instance + ", " +
+                    "src: " + sample.src + ", " +
                     "dst: " + sample.dst + ", " +
                     "srcPort: " + sample.srcPort + ", " +
                     "dstPort: " + sample.dstPort + ", " +

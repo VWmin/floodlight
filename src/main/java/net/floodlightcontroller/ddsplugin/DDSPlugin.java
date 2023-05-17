@@ -55,6 +55,12 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
         floodlightProviderService = context.getServiceImpl(IFloodlightProviderService.class);
         linkDiscoveryService = context.getServiceImpl(ILinkDiscoveryService.class);
         logger = LoggerFactory.getLogger(DDSPlugin.class);
+
+        loadConfig( context.getConfigParams(this) );
+    }
+
+    private void loadConfig(Map<String, String> configParams) {
+        DDSInfo.INSTANCE_ID = Integer.parseInt(configParams.get("instanceId"));
     }
 
     /**
@@ -72,6 +78,9 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     @Override
     public void linkDiscoveryUpdate(List<LDUpdate> updateList) {
         updateList.forEach(ldUpdate -> {
+            if(ldUpdate.fromExternal) {
+                return;
+            }
             logger.info("Read internal link discovery update from LDManager: {}", ldUpdate);
             ddsPublisher.publish(ldUpdate);
         });

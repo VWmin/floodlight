@@ -48,6 +48,7 @@ public interface ILinkDiscovery {
     }
 
     public class LDUpdate {
+        public boolean fromExternal = false;
         protected DatapathId src;
         protected OFPort srcPort;
         protected DatapathId dst;

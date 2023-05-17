@@ -1,6 +1,8 @@
 module FloodLight {
     @topic
     struct LDUpdate {
+        @key
+        long instance;
         long src;
         octet srcPort;
         long dst;
