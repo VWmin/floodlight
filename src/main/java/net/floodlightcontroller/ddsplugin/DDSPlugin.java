@@ -5,6 +5,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.ddsplugin.messaging.MessageSubject;
 import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryListener;
 
 import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
@@ -21,9 +22,9 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     protected ILinkDiscoveryService linkDiscoveryService;
     protected static Logger logger;
 
-    private DDSPublisher ddsPublisher;
+//    private DDSPublisher ddsPublisher;
     private DDSSubscriber ddsSubscriber;
-
+private LDUpdatePublisher ddsPublisher;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -69,7 +70,8 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         linkDiscoveryService.addListener(this);
-        ddsPublisher = new DDSPublisher();
+//        ddsPublisher = new DDSPublisher();
+        ddsPublisher = new LDUpdatePublisher();
         ddsSubscriber = new DDSSubscriber(linkDiscoveryService);
         ddsPublisher.start();
         ddsSubscriber.start();
@@ -84,6 +86,10 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
             logger.info("Read internal link discovery update from LDManager: {}", ldUpdate);
             ddsPublisher.publish(ldUpdate);
         });
+    }
+
+    public <M> void broadcast(M message, MessageSubject subject) {
+
     }
 
     @Override

@@ -468,9 +468,7 @@ IHAListener, IFloodlightModule, IOFSwitchService, IStoreListener<DatapathId> {
         if(sw.getStatus().isVisible()) {
             // no need to count here. SwitchUpdate.dispatch will count
             // the portchanged
-            SwitchUpdate update = new SwitchUpdate(sw.getId(),
-                    SwitchUpdateType.PORTCHANGED,
-                    port, changeType);
+            SwitchUpdate update = new SwitchUpdate(sw.getId(), SwitchUpdateType.PORTCHANGED, port, changeType);
             addUpdateToQueue(update);
         }
     }
