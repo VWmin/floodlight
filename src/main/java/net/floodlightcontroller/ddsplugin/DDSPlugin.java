@@ -1,11 +1,13 @@
 package net.floodlightcontroller.ddsplugin;
 
+import com.google.gson.Gson;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.ddsplugin.messaging.MessageSubject;
+import net.floodlightcontroller.linkdiscovery.ILinkDiscovery;
 import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryListener;
 
 import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
@@ -20,10 +22,12 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     protected ILinkDiscoveryService linkDiscoveryService;
     protected static Logger logger;
 
-//    private DDSPublisher ddsPublisher;
+    //    private DDSPublisher ddsPublisher;
 //    private DDSSubscriber ddsSubscriber;
-private LDUpdatePublisher ddsPublisher;
-private LDUpdateSubscriber ddsSubscriber;
+//private LDUpdatePublisher ddsPublisher;
+//private LDUpdateSubscriber ddsSubscriber;
+    private JsonPublisher ddsPublisher;
+    private JsonSubscriber<ILinkDiscovery.LDUpdate> ddsSubscriber;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -56,7 +60,7 @@ private LDUpdateSubscriber ddsSubscriber;
         linkDiscoveryService = context.getServiceImpl(ILinkDiscoveryService.class);
         logger = LoggerFactory.getLogger(DDSPlugin.class);
 
-        loadConfig( context.getConfigParams(this) );
+        loadConfig(context.getConfigParams(this));
     }
 
     private void loadConfig(Map<String, String> configParams) {
@@ -70,9 +74,11 @@ private LDUpdateSubscriber ddsSubscriber;
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         linkDiscoveryService.addListener(this);
 //        ddsPublisher = new DDSPublisher();
-        ddsPublisher = new LDUpdatePublisher();
+//        ddsPublisher = new LDUpdatePublisher();
 //        ddsSubscriber = new DDSSubscriber(linkDiscoveryService);
-        ddsSubscriber = new LDUpdateSubscriber(linkDiscoveryService);
+//        ddsSubscriber = new LDUpdateSubscriber(linkDiscoveryService);
+        ddsPublisher = new JsonPublisher();
+        ddsSubscriber = new JsonSubscriber<>(ILinkDiscovery.LDUpdate.class);
         ddsPublisher.start();
         ddsSubscriber.start();
     }
@@ -80,16 +86,16 @@ private LDUpdateSubscriber ddsSubscriber;
     @Override
     public void linkDiscoveryUpdate(List<LDUpdate> updateList) {
         updateList.forEach(ldUpdate -> {
-            if(ldUpdate.fromExternal) {
+            if (ldUpdate.fromExternal) {
                 return;
             }
             logger.info("Read internal link discovery update from LDManager: {}", ldUpdate);
-            ddsPublisher.publish(ldUpdate);
+//            ddsPublisher.publish(ldUpdate);
+            ddsPublisher.publishObj(ldUpdate);
         });
     }
 
-    public <M> void broadcast(M message, MessageSubject subject) {
-
+    public <M> void broadcast(M message, String topic) {
     }
 
     @Override
