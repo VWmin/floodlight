@@ -5,11 +5,14 @@ import OpenDDS.DCPS.DEFAULT_STATUS_MASK;
 import OpenDDS.DCPS.TheParticipantFactory;
 import OpenDDS.DCPS.TheServiceParticipant;
 import org.omg.CORBA.StringSeqHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public abstract class BaseDDSPublisher<T, S> {
+    private static final Logger log = LoggerFactory.getLogger(BaseDDSPublisher.class);
     protected DomainParticipantFactory dpf;
     protected DomainParticipant dp;
     protected Topic top;
@@ -20,28 +23,28 @@ public abstract class BaseDDSPublisher<T, S> {
     protected PublishWorker<T, S> worker;
     protected final BlockingQueue<T> toPublish = new LinkedBlockingQueue<>();
 
-    public BaseDDSPublisher(String topic, TypeSupportOperations servant) {
+    public BaseDDSPublisher(int domainId, String topic, TypeSupportOperations servant) {
         this.topic = topic;
 
         String[] args = {"-DCPSConfigFile", "transport.ini"};
         dpf = TheParticipantFactory.WithArgs(new StringSeqHolder(args));
         if (dpf == null) {
-            System.err.println("ERROR: Domain Participant Factory not found");
+            log.error("ERROR: Domain Participant Factory not found");
             return;
         }
 
-        dp = dpf.create_participant(DDSInfo.DOMAIN_ID,
+        dp = dpf.create_participant(domainId,
                 PARTICIPANT_QOS_DEFAULT.get(), null,
                 DEFAULT_STATUS_MASK.value);
         if (dp == null) {
-            System.err.println("Domain Participant creation failed");
+            log.error("Domain Participant creation failed");
             return;
         }
 
         // BarTypeSupportImpl is type specific
 //        LDUpdateTypeSupportImpl servant = new LDUpdateTypeSupportImpl();
         if (servant.register_type(dp, "") != RETCODE_OK.value) {
-            System.err.println("ERROR: register_type failed");
+            log.error("ERROR: register_type failed");
             return;
         }
 
@@ -64,7 +67,7 @@ public abstract class BaseDDSPublisher<T, S> {
     abstract void initWorker();
 
     public void start() {
-        System.out.println("Start Publisher");
+        log.info("Start Publisher");
         initWorker();
         worker.start();
     }
@@ -72,14 +75,14 @@ public abstract class BaseDDSPublisher<T, S> {
     public void stop() {
         worker.stop();
 
-        System.out.println("Stop Publisher");
+        log.info("Stop Publisher");
 
         // Clean up
         dp.delete_contained_entities();
         dpf.delete_participant(dp);
         TheServiceParticipant.shutdown();
 
-        System.out.println("Publisher exiting");
+        log.info("Publisher exiting");
     }
 
     public void publish(T rawType) {

@@ -13,8 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDDSPluginService {
 
@@ -23,8 +21,9 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     protected static Logger logger;
 
 //    private DDSPublisher ddsPublisher;
-    private DDSSubscriber ddsSubscriber;
+//    private DDSSubscriber ddsSubscriber;
 private LDUpdatePublisher ddsPublisher;
+private LDUpdateSubscriber ddsSubscriber;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -72,7 +71,8 @@ private LDUpdatePublisher ddsPublisher;
         linkDiscoveryService.addListener(this);
 //        ddsPublisher = new DDSPublisher();
         ddsPublisher = new LDUpdatePublisher();
-        ddsSubscriber = new DDSSubscriber(linkDiscoveryService);
+//        ddsSubscriber = new DDSSubscriber(linkDiscoveryService);
+        ddsSubscriber = new LDUpdateSubscriber(linkDiscoveryService);
         ddsPublisher.start();
         ddsSubscriber.start();
     }

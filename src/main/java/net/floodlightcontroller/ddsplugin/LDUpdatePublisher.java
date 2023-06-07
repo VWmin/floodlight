@@ -9,7 +9,7 @@ import net.floodlightcontroller.linkdiscovery.ILinkDiscovery;
 public final class LDUpdatePublisher extends BaseDDSPublisher<ILinkDiscovery.LDUpdate, LDUpdate> {
 
     public LDUpdatePublisher() {
-        super(DDSInfo.TOPIC_NAME, new LDUpdateTypeSupportImpl());
+        super(DDSInfo.DOMAIN_ID, DDSInfo.TOPIC_NAME, new LDUpdateTypeSupportImpl());
     }
 
     @Override

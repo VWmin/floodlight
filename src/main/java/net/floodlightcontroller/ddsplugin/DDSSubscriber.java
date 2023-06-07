@@ -6,9 +6,9 @@ import OpenDDS.DCPS.*;
 import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
 import org.omg.CORBA.StringSeqHolder;
 
-
+@Deprecated
 public class DDSSubscriber {
-    private Worker worker;
+//    private Worker worker;
     private LDUpdateDataReader updateDataReader;
     private DomainParticipantFactory dpf;
     private DomainParticipant dp;
@@ -41,8 +41,8 @@ public class DDSSubscriber {
 
 
         // 向中间件提供listener是通知数据接收和访问数据的最简单方式
-        LDUpdateReaderListenerImpl listener = new LDUpdateReaderListenerImpl(linkDiscoveryService);
-        worker = new Worker(sub, top, listener);
+//        LDUpdateReaderListenerImpl listener = new LDUpdateReaderListenerImpl(linkDiscoveryService);
+//        worker = new Worker(sub, top, listener);
     }
 
     public void stop() {
@@ -59,44 +59,44 @@ public class DDSSubscriber {
 
     public void start() {
         System.out.println("Start Subscriber");
-        worker.start();
+//        worker.start();
     }
 
-    public static class Worker implements Runnable {
-        private Subscriber sub;
-        private Topic top;
-        LDUpdateReaderListenerImpl listener;
-        private final Thread workerThread;
-
-
-        public Worker(Subscriber sub, Topic top, LDUpdateReaderListenerImpl listener) {
-            this.sub = sub;
-            this.top = top;
-            this.listener = listener;
-            workerThread = new Thread(this, "DDSSubscriber-Worker");
-        }
-
-
-        @Override
-        public void run() {
-            // 会同时开启线程，消息到达的调用会在另外的线程中
-            DataReader dr = sub.create_datareader(
-                    top, DATAREADER_QOS_DEFAULT.get(), listener,
-                    DEFAULT_STATUS_MASK.value);
-
-            if (dr == null) {
-                System.err.println("ERROR: DataReader creation failed");
-            }
-
-        }
-
-
-        public void stop() {
-            workerThread.interrupt();
-        }
-
-        public void start() {
-            workerThread.start();
-        }
-    }
+//    public static class Worker implements Runnable {
+//        private Subscriber sub;
+//        private Topic top;
+//        LDUpdateReaderListenerImpl listener;
+//        private final Thread workerThread;
+//
+//
+//        public Worker(Subscriber sub, Topic top, LDUpdateReaderListenerImpl listener) {
+//            this.sub = sub;
+//            this.top = top;
+//            this.listener = listener;
+//            workerThread = new Thread(this, "DDSSubscriber-Worker");
+//        }
+//
+//
+//        @Override
+//        public void run() {
+//            // 会同时开启线程，消息到达的调用会在另外的线程中
+//            DataReader dr = sub.create_datareader(
+//                    top, DATAREADER_QOS_DEFAULT.get(), listener,
+//                    DEFAULT_STATUS_MASK.value);
+//
+//            if (dr == null) {
+//                System.err.println("ERROR: DataReader creation failed");
+//            }
+//
+//        }
+//
+//
+//        public void stop() {
+//            workerThread.interrupt();
+//        }
+//
+//        public void start() {
+//            workerThread.start();
+//        }
+//    }
 }
