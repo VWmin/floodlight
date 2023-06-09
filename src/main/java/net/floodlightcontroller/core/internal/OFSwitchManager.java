@@ -39,6 +39,8 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.ddsplugin.DDSPlugin;
+import net.floodlightcontroller.ddsplugin.IDDSPluginService;
 import net.floodlightcontroller.debugcounter.IDebugCounterService;
 
 import org.projectfloodlight.openflow.protocol.OFControllerRole;
@@ -149,6 +151,8 @@ IHAListener, IFloodlightModule, IOFSwitchService, IStoreListener<DatapathId> {
 
     protected static Timer timer;
 
+    private IDDSPluginService dds;
+
     /** IHAListener Implementation **/
     @Override
     public void transitionToActive() {
@@ -202,6 +206,9 @@ IHAListener, IFloodlightModule, IOFSwitchService, IStoreListener<DatapathId> {
                 sw.setMaxTableForTableMissFlow(forwardToControllerFlowsUpToTable);
             }
         }
+
+        dds.broadcast("Switch", new SwitchSyncRepresentation(sw));
+
     }
 
     @Override
@@ -604,6 +611,7 @@ IHAListener, IFloodlightModule, IOFSwitchService, IStoreListener<DatapathId> {
         l.add(IFloodlightProviderService.class);
         l.add(IDebugCounterService.class);
         l.add(ISyncService.class);
+        l.add(IDDSPluginService.class);
 
         return l;
     }
@@ -614,6 +622,7 @@ IHAListener, IFloodlightModule, IOFSwitchService, IStoreListener<DatapathId> {
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         debugCounterService = context.getServiceImpl(IDebugCounterService.class);
         syncService = context.getServiceImpl(ISyncService.class);
+        dds = context.getServiceImpl(IDDSPluginService.class);
 
         // Module variables
         switchHandlers = new ConcurrentHashMap<DatapathId, OFSwitchHandshakeHandler>();
@@ -993,6 +1002,7 @@ IHAListener, IFloodlightModule, IOFSwitchService, IStoreListener<DatapathId> {
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         startUpBase(context);
         bootstrapNetty();
+        dds.newTopic("Switch", SwitchSyncRepresentation.class, this::handleDDSSample);
     }
 
     /**
@@ -1291,4 +1301,10 @@ IHAListener, IFloodlightModule, IOFSwitchService, IStoreListener<DatapathId> {
 
     @Override
     public void addSwitchEvent(DatapathId switchDpid, String reason, boolean flushNow) {}
+
+
+    void handleDDSSample(SwitchSyncRepresentation representation){
+        System.out.println("handle dds msg");
+        System.out.println(representation);
+    }
 }

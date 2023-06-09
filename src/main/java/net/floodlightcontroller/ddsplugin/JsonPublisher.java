@@ -9,8 +9,8 @@ import java.util.concurrent.BlockingQueue;
 public class JsonPublisher extends BaseDDSPublisher<String, Json> {
     private final Gson gson = new Gson();
 
-    public JsonPublisher() {
-        super(DDSInfo.DOMAIN_ID, "Json", new JsonTypeSupportImpl());
+    public JsonPublisher(String topic) {
+        super(DDSInfo.DOMAIN_ID, topic, new JsonTypeSupportImpl());
     }
 
     @Override

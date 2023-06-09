@@ -11,23 +11,27 @@ import net.floodlightcontroller.linkdiscovery.ILinkDiscovery;
 import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryListener;
 
 import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
+import net.floodlightcontroller.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDDSPluginService {
 
     protected IFloodlightProviderService floodlightProviderService;
-    protected ILinkDiscoveryService linkDiscoveryService;
+//    protected ILinkDiscoveryService linkDiscoveryService;
     protected static Logger logger;
 
     //    private DDSPublisher ddsPublisher;
-//    private DDSSubscriber ddsSubscriber;
-//private LDUpdatePublisher ddsPublisher;
-//private LDUpdateSubscriber ddsSubscriber;
-    private JsonPublisher ddsPublisher;
-    private JsonSubscriber<ILinkDiscovery.LDUpdate> ddsSubscriber;
+    //    private DDSSubscriber ddsSubscriber;
+    //private LDUpdatePublisher ddsPublisher;
+    //private LDUpdateSubscriber ddsSubscriber;
+//    private JsonPublisher ddsPublisher;
+//    private JsonSubscriber<ILinkDiscovery.LDUpdate> ddsSubscriber;
+    private Map<String, Pair<JsonPublisher, JsonSubscriber<?>>> publishers = new ConcurrentHashMap<>();
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -47,7 +51,7 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
         ArrayList<Class<? extends IFloodlightService>> list = new ArrayList<>();
         list.add(IFloodlightProviderService.class);
-        list.add(ILinkDiscoveryService.class);
+//        list.add(ILinkDiscoveryService.class);
         return list;
     }
 
@@ -57,7 +61,7 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         floodlightProviderService = context.getServiceImpl(IFloodlightProviderService.class);
-        linkDiscoveryService = context.getServiceImpl(ILinkDiscoveryService.class);
+//        linkDiscoveryService = context.getServiceImpl(ILinkDiscoveryService.class);
         logger = LoggerFactory.getLogger(DDSPlugin.class);
 
         loadConfig(context.getConfigParams(this));
@@ -72,15 +76,15 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
      */
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
-        linkDiscoveryService.addListener(this);
+//        linkDiscoveryService.addListener(this);
 //        ddsPublisher = new DDSPublisher();
 //        ddsPublisher = new LDUpdatePublisher();
 //        ddsSubscriber = new DDSSubscriber(linkDiscoveryService);
 //        ddsSubscriber = new LDUpdateSubscriber(linkDiscoveryService);
-        ddsPublisher = new JsonPublisher();
-        ddsSubscriber = new JsonSubscriber<>(ILinkDiscovery.LDUpdate.class);
-        ddsPublisher.start();
-        ddsSubscriber.start();
+//        ddsPublisher = new JsonPublisher();
+//        ddsSubscriber = new JsonSubscriber<>(ILinkDiscovery.LDUpdate.class);
+//        ddsPublisher.start();
+//        ddsSubscriber.start();
     }
 
     @Override
@@ -91,11 +95,26 @@ public class DDSPlugin implements IFloodlightModule, ILinkDiscoveryListener, IDD
             }
             logger.info("Read internal link discovery update from LDManager: {}", ldUpdate);
 //            ddsPublisher.publish(ldUpdate);
-            ddsPublisher.publishObj(ldUpdate);
+//            ddsPublisher.publishObj(ldUpdate);
         });
     }
 
-    public <M> void broadcast(M message, String topic) {
+    public void broadcast(String topic, Object msg) {
+//        ddsPublisher.publishObj(msg);
+        if (!publishers.containsKey(topic)) {
+            return ;
+        }
+        publishers.get(topic).getKey().publishObj(msg);
+    }
+
+    public <T> void newTopic(String topic, Class<T> clazz, Consumer<T> callback) {
+        if (!publishers.containsKey(topic)) {
+            JsonPublisher pub = new JsonPublisher(topic);
+            JsonSubscriber<T> sub = new JsonSubscriber<>(topic, clazz, callback);
+            pub.start();
+            sub.start();
+            publishers.put(topic, new Pair<>(pub, sub));
+        }
     }
 
     @Override
